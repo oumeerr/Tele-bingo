@@ -7,6 +7,22 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
+async function getTelegramProfilePictureUrl(chatId: number) {
+  try {
+    const photosResponse = await fetch(`https://api.telegram.org/bot${botToken}/getUserProfilePhotos?user_id=${chatId}&limit=1`);
+    const photosData = await photosResponse.json();
+    if (photosData.result && photosData.result.total_count > 0) {
+      const fileId = photosData.result.photos[0][0].file_id;
+      const fileResponse = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`);
+      const fileData = await fileResponse.json();
+      return `https://api.telegram.org/file/bot${botToken}/${fileData.result.file_path}`;
+    }
+  } catch (e) {
+    console.error("Failed to fetch profile picture", e);
+  }
+  return null;
+}
+
 serve(async (req) => {
   const { message } = await req.json();
 
@@ -18,12 +34,15 @@ serve(async (req) => {
   // 1. Handle Registration via Contact Sharing
   if (message.contact) {
     const phoneNumber = message.contact.phone_number;
+    const profilePictureUrl = await getTelegramProfilePictureUrl(chatId);
+    
     const { data, error } = await supabase
       .from('profiles')
       .upsert({ 
         telegram_id: chatId, 
         username: message.from.username,
-        phone: phoneNumber 
+        phone: phoneNumber,
+        profile_picture_url: profilePictureUrl
       })
       .select();
 

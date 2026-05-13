@@ -3,6 +3,7 @@ CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   telegram_id BIGINT UNIQUE NOT NULL,
   username TEXT,
+  profile_picture_url TEXT,
   balance DECIMAL(12, 2) DEFAULT 0.00,
   referrer_id BIGINT REFERENCES profiles(telegram_id),
   created_at TIMESTAMPTZ DEFAULT NOW()
