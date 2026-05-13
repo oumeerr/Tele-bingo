@@ -1,0 +1,7 @@
+{
+  "name": "Hulumbingo final",
+  "description": "A high-stakes web application for Bingo players, featuring a unique 400-card system, secure local wallet management, and weekly prize pools.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
