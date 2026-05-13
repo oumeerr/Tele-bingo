@@ -12,6 +12,15 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, setUser }) => {
   const [newUsername, setNewUsername] = useState(user.username);
   const [loading, setLoading] = useState(false);
 
+  const bonusBalance = React.useMemo(() => {
+    const saved = localStorage.getItem('hb_bonus_history');
+    if (saved) {
+      const history = JSON.parse(saved);
+      return history.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+    }
+    return 0;
+  }, []);
+
   const handleSave = () => {
     if (!newUsername.trim()) return;
     if (newUsername === user.username) {
@@ -77,7 +86,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, setUser }) => {
         </div>
         <div className="bg-hb-surface p-3 rounded-xl border border-hb-border w-full flex justify-between items-center">
           <span className="text-[10px] font-bold text-hb-muted uppercase">Bonus Funds</span>
-          <span className="text-xs font-black text-hb-gold">{user.bonus_balance || 0} ETB</span>
+          <span className="text-xs font-black text-hb-gold">{bonusBalance.toLocaleString()} ETB</span>
         </div>
       </div>
 
@@ -94,20 +103,20 @@ const ProfileView: React.FC<ProfileViewProps> = ({ user, setUser }) => {
 
       <div className="bg-[#121212] p-6 rounded-3xl text-white shadow-xl relative overflow-hidden border border-hb-border">
         <h3 className="text-lg font-black mb-1 italic relative z-10 text-hb-gold">REFER & EARN</h3>
-        <p className="text-[10px] opacity-60 mb-6 relative z-10 font-bold uppercase tracking-widest">Invite friends and get 10 ETB per head!</p>
+        <p className="text-[10px] opacity-60 mb-6 relative z-10 font-bold uppercase tracking-widest">Invite friends and get 5 ETB for every friend!</p>
         <div className="bg-hb-surface p-4 rounded-2xl flex items-center justify-between border border-hb-border relative z-10 mb-2">
-           <span className="text-[9px] font-mono truncate mr-2 font-black text-hb-muted">{window.location.origin}/?ref={user.username}</span>
+           <span className="text-[9px] font-mono truncate mr-2 font-black text-hb-muted">{window.location.host}/?ref={user.username}</span>
            <button 
              onClick={() => {
-               navigator.clipboard.writeText(`${window.location.origin}/?ref=${user.username}`);
+               navigator.clipboard.writeText(`${window.location.protocol}//${window.location.host}/?ref=${user.username}`);
                alert("Referral link copied!");
              }}
-             className="bg-hb-gold text-hb-blueblack px-3 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap"
+             className="bg-hb-gold text-hb-blueblack px-3 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap active:scale-95 transition-transform"
            >
              COPY LINK
            </button>
         </div>
-        <p className="text-[8px] text-center text-hb-muted italic">Referee gets 15 ETB bonus instantly</p>
+        <p className="text-[8px] text-center text-hb-gold italic">Friend gets 5 ETB bonus instantly upon registration</p>
         <i className="fas fa-link absolute -right-4 -bottom-4 text-hb-gold/5 text-7xl rotate-12"></i>
       </div>
     </div>

@@ -47,6 +47,17 @@ const App: React.FC = () => {
       photo: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest',
     };
   });
+
+  // Referral Detection
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const refCode = urlParams.get('ref');
+      if (refCode) {
+        localStorage.setItem('hb_referral_code', refCode);
+      }
+    }
+  }, [isAuthenticated]);
   const [viewStack, setViewStack] = useState<View[]>(['home']);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [lang, setLang] = useState<Language>(Language.ENGLISH);
@@ -62,6 +73,11 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEYS.USER, JSON.stringify(user));
     localStorage.setItem(LOCAL_STORAGE_KEYS.AUTH, isAuthenticated.toString());
+    
+    // Notify Telegram that the app is ready
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+    }
   }, [user, isAuthenticated]);
 
   // Splash Delay
@@ -142,13 +158,42 @@ const App: React.FC = () => {
 
   if (!isAuthenticated) {
     return <LoginView onLogin={(data) => {
+      const refCode = localStorage.getItem('hb_referral_code');
+      const bonus = refCode ? 5 : 0;
+      
       setIsAuthenticated(true);
       setUser(prev => ({
         ...prev, 
         username: data?.username || 'BingoUser', 
         mobile: data?.phoneNumber || prev.mobile,
-        balance: 20
+        balance: 15 + bonus // Base 15 + 5 for referral
       }));
+
+      // Add to bonus history
+      const currentHistory = JSON.parse(localStorage.getItem('hb_bonus_history') || '[]');
+      const regBonus = {
+        id: 'reg_' + Date.now(),
+        type: 'bonus',
+        amount: 15,
+        status: 'completed',
+        created_at: new Date().toISOString(),
+        metadata: { reason: 'Registration Bonus' }
+      };
+      const finalHistory = [regBonus, ...currentHistory];
+      
+      if (bonus > 0) {
+        finalHistory.unshift({
+          id: 'ref_' + Date.now(),
+          type: 'bonus',
+          amount: 5,
+          status: 'completed',
+          created_at: new Date().toISOString(),
+          metadata: { reason: `Referral Bonus (Ref: ${refCode})` }
+        });
+      }
+      localStorage.setItem('hb_bonus_history', JSON.stringify(finalHistory));
+      
+      localStorage.removeItem('hb_referral_code');
     }} />;
   }
 
@@ -207,7 +252,7 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen w-full bg-hb-bg text-white shadow-2xl overflow-hidden relative font-sans">
       {/* Header Container */}
-      <div className="z-30 shadow-md sticky top-0 w-full bg-[#1A1A1A] border-b border-hb-border/50">
+      <div className="z-30 shadow-md sticky top-0 w-full bg-hb-blueblack border-b border-hb-border/50">
         <div className="max-w-md mx-auto">
           <header className="px-5 py-4 flex items-center justify-between h-[70px]">
             <div className="w-12 flex justify-start">
@@ -269,7 +314,7 @@ const App: React.FC = () => {
         <div className="max-w-md mx-auto min-h-full">
           {currentView === 'home' && <HomeView onQuickPlay={() => navigateTo('betting-list')} arenaState={arenaState} />}
           {currentView === 'wallet' && <WalletView user={user} setUser={setUser} />}
-          {currentView === 'leaderboard' && <LeaderboardView />}
+          {currentView === 'leaderboard' && <LeaderboardView onPlay={() => navigateTo('betting-list')} />}
           {currentView === 'history' && <HistoryView />}
           {currentView === 'profile' && <ProfileView user={user} setUser={setUser} />}
           {currentView === 'how-to-play' && <HowToPlayView />}
@@ -316,7 +361,7 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#1A1A1A]/95 backdrop-blur-xl border-t border-hb-border z-40 pb-safe shadow-2xl">
+      <nav className="fixed bottom-0 left-0 right-0 w-full bg-hb-blueblack/95 backdrop-blur-xl border-t border-hb-border z-40 pb-safe shadow-2xl">
         <div className="max-w-md mx-auto flex items-center justify-around px-2 py-4">
           <FooterItem icon="fa-wallet" label={t('wallet')} active={currentView === 'wallet'} onClick={() => navigateTo('wallet', true)} />
           <FooterItem icon="fa-trophy" label={t('leaderboard')} active={currentView === 'leaderboard'} onClick={() => navigateTo('leaderboard', true)} />

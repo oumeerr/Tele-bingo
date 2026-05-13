@@ -68,11 +68,11 @@ const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-hb-bg relative overflow-hidden">
       {/* Background Decor */}
-      <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[60%] bg-gradient-to-b from-green-900/20 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-[-20%] left-[-20%] w-[140%] h-[60%] bg-gradient-to-b from-hb-emerald/20 to-transparent rounded-full blur-3xl pointer-events-none"></div>
       
       <div className="z-10 flex flex-col items-center text-center w-full max-w-sm">
         
-        <div className="w-28 h-28 bg-[#121212] rounded-[2.5rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] flex items-center justify-center mb-6 relative overflow-hidden border border-hb-border">
+        <div className="w-28 h-28 bg-hb-surface rounded-[2.5rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] flex items-center justify-center mb-6 relative overflow-hidden border border-hb-border">
            <img src="logo.png" className="w-20 h-20 object-contain relative z-10" onError={(e) => {
              const target = e.target as HTMLImageElement;
              target.style.display = 'none';

@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { supabase } from "./supabaseClient";
 
 export interface PromoScript {
   title: string;
@@ -8,10 +9,44 @@ export interface PromoScript {
 }
 
 /**
+ * Generates content via Gemini and stores in Supabase
+ */
+export const summarizeAndStore = async (userInput: string) => {
+  // Use VITE_ environment variables for client-side access
+  const apiKey = import.meta.env.VITE_GOOGLE_AI_STUDIO_KEY;
+  if (!apiKey) {
+    throw new Error("VITE_GOOGLE_AI_STUDIO_KEY is not defined");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: userInput,
+    });
+
+    const aiResponse = response.text || "";
+
+    // 2. Store the result in Supabase
+    const { data, error } = await supabase
+      .from('ai_logs')
+      .insert([{ prompt: userInput, response: aiResponse }]);
+
+    if (error) throw error;
+
+    return data;
+  } catch (error) {
+    console.error("Gemini-Supabase Integration Error:", error);
+    throw error;
+  }
+};
+
+/**
  * Generates a structured promotional script using Gemini 3 Pro.
  */
 export const generatePromoDescription = async (topic: string): Promise<PromoScript | null> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
   
   const systemInstruction = `You are a world-class creative director and social media strategist for Hulumbingo (HB). 
 Your goal is to create high-energy, viral promotional content for the Ethiopian market.

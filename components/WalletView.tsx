@@ -78,7 +78,7 @@ const MethodButton: React.FC<MethodButtonProps> = ({
 };
 
 const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
-  const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'transfer'>('deposit');
+  const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw' | 'transfer' | 'bonus'>('deposit');
   const [amount, setAmount] = useState('');
   const [bank, setBank] = useState('');
   const [refId, setRefId] = useState('');
@@ -100,6 +100,19 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
     const saved = localStorage.getItem('hb_transfers');
     return saved ? JSON.parse(saved) : [];
   });
+  const [bonusHistory, setBonusHistory] = useState<any[]>(() => {
+    const saved = localStorage.getItem('hb_bonus_history');
+    if (saved) return JSON.parse(saved);
+    // Initial Registration Bonus
+    return [{
+      id: 'init_bonus',
+      type: 'bonus',
+      amount: 15,
+      status: 'completed',
+      created_at: new Date().toISOString(),
+      metadata: { reason: 'Registration Bonus' }
+    }];
+  });
 
   useEffect(() => {
     localStorage.setItem('hb_deposits', JSON.stringify(depositHistory));
@@ -110,6 +123,9 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
   useEffect(() => {
     localStorage.setItem('hb_transfers', JSON.stringify(transferHistory));
   }, [transferHistory]);
+  useEffect(() => {
+    localStorage.setItem('hb_bonus_history', JSON.stringify(bonusHistory));
+  }, [bonusHistory]);
 
   useEffect(() => {
     setAmount('');
@@ -210,7 +226,7 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
     }
 
     return (
-      <div className="mt-8 space-y-4">
+      <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-hb-gold animate-pulse"></div>
@@ -220,7 +236,7 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
         </div>
         <div className="space-y-3">
           {history.map((tx, idx) => {
-            const isPositive = tx.type === 'deposit';
+            const isPositive = tx.type === 'deposit' || tx.type === 'bonus';
             const isNeutral = tx.type === 'transfer';
             const statusColors: any = {
               pending: 'bg-orange-500/10 text-orange-500 border-orange-500/10',
@@ -248,13 +264,14 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
                       <i className={`fas ${
                         tx.type === 'deposit' ? 'fa-arrow-trend-up' : 
                         tx.type === 'withdraw' ? 'fa-arrow-trend-down' : 
+                        tx.type === 'bonus' ? 'fa-gift' :
                         'fa-right-left'
                       }`}></i>
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-[14px] font-bold text-white tracking-tight">
-                          {tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
+                          {tx.type === 'bonus' ? tx.metadata?.reason || 'Bonus Reward' : tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}
                         </span>
                         <span className={`text-[8px] px-1.5 py-0.5 rounded-md border font-black uppercase flex items-center gap-1 leading-none ${statusColors[tx.status] || statusColors.pending}`}>
                           <i className={`fas ${statusIcons[tx.status] || statusIcons.pending} text-[7px]`}></i>
@@ -315,6 +332,32 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
 
   return (
     <div className="p-5">
+      {/* Refer & Earn Section */}
+      <div className="bg-hb-gold rounded-[24px] p-6 mb-6 shadow-lg shadow-hb-gold/10 relative overflow-hidden group">
+        <div className="relative z-10">
+           <h3 className="text-hb-blueblack font-black text-lg italic tracking-tighter mb-1 uppercase">Refer & Earn Bonus</h3>
+           <p className="text-hb-blueblack/60 text-[10px] font-bold uppercase tracking-widest mb-4">Invite friends & get 5 ETB each!</p>
+           
+           <div className="flex gap-2">
+              <div className="flex-1 bg-hb-blueblack/5 border border-hb-blueblack/10 rounded-xl px-4 flex items-center overflow-hidden h-12">
+                 <span className="text-hb-blueblack/50 text-[9px] font-mono font-bold truncate">
+                   {window.location.host}/?ref={user.username}
+                 </span>
+              </div>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://${window.location.host}/?ref=${user.username}`);
+                  alert("Referral link copied!");
+                }}
+                className="bg-hb-blueblack text-white px-4 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-transform"
+              >
+                Copy
+              </button>
+           </div>
+        </div>
+        <i className="fas fa-gift absolute -right-4 -bottom-4 text-hb-blueblack/10 text-[6rem] rotate-12 group-hover:rotate-0 transition-transform duration-500"></i>
+      </div>
+
       <div className="bg-gradient-to-br from-[#1A1A1A] to-black border border-hb-border p-8 rounded-[24px] text-white mb-8 shadow-xl relative overflow-hidden">
         <div className="relative z-10">
           <p className="text-[11px] font-bold uppercase opacity-60 mb-1.5 tracking-widest text-hb-muted">Available Balance</p>
@@ -329,14 +372,14 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
         <i className="fas fa-wallet absolute -right-6 -bottom-6 text-hb-gold/10 text-[9rem] -rotate-12"></i>
       </div>
 
-      <div className="flex bg-hb-surface border border-hb-border p-1.5 rounded-2xl mb-8">
-        {['deposit', 'withdraw', 'transfer'].map(tab => (
+      <div className="flex bg-hb-surface border border-hb-border p-1.5 rounded-2xl mb-8 overflow-x-auto gap-1 no-scrollbar">
+        {['deposit', 'withdraw', 'transfer', 'bonus'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`flex-1 py-3 rounded-xl text-[11px] font-bold uppercase transition-all ${activeTab === tab ? 'bg-hb-gold text-hb-blueblack shadow-md' : 'text-hb-muted hover:text-white'}`}
+            className={`flex-1 min-w-[80px] py-3 rounded-xl text-[10px] font-black uppercase transition-all ${activeTab === tab ? 'bg-hb-gold text-hb-blueblack shadow-md' : 'text-hb-muted hover:text-white'}`}
           >
-            {tab === 'deposit' ? 'Add Money' : tab === 'withdraw' ? 'Get Cash' : 'Send Money'}
+            {tab === 'deposit' ? 'Add' : tab === 'withdraw' ? 'Out' : tab === 'transfer' ? 'Send' : 'Bonus'}
           </button>
         ))}
       </div>
@@ -564,6 +607,27 @@ const WalletView: React.FC<WalletViewProps> = ({ user, setUser }) => {
            
            {/* Transfer History Section */}
            {renderHistory(transferHistory, 'Transfer')}
+        </div>
+      )}
+
+      {activeTab === 'bonus' && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+           <div className="bg-hb-surface p-7 rounded-[24px] border border-hb-border shadow-sm mb-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-black text-sm italic uppercase tracking-widest">Bonus History</h3>
+                <p className="text-hb-muted text-[10px] font-bold">Earned from referrals & promos</p>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1.5 justify-end">
+                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                   <span className="text-[10px] font-black uppercase text-emerald-500 tracking-widest">Total Earned</span>
+                </div>
+                <span className="text-xl font-black text-hb-gold italic">
+                  {bonusHistory.reduce((acc, curr) => acc + (curr.amount || 0), 0).toLocaleString()} ETB
+                </span>
+              </div>
+           </div>
+           {renderHistory(bonusHistory, 'Bonus')}
         </div>
       )}
     </div>

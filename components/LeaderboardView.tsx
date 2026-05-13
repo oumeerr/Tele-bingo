@@ -16,7 +16,11 @@ const TIERS = {
   1000: { minGames: 200, multiplier: 1, basePrize: 50000 }, // Custom high stakes
 };
 
-const LeaderboardView: React.FC = () => {
+interface LeaderboardViewProps {
+  onPlay?: () => void;
+}
+
+const LeaderboardView: React.FC<LeaderboardViewProps> = ({ onPlay }) => {
   const [tab, setTab] = useState<'daily' | 'weekly'>('daily');
   const [selectedBet, setSelectedBet] = useState<10 | 20 | 1000>(10);
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
@@ -24,19 +28,21 @@ const LeaderboardView: React.FC = () => {
   const [countdown, setCountdown] = useState({ daily: '', weekly: '' });
 
   const calculatePrize = (rank: number, bet: 10 | 20 | 1000) => {
+    if (rank > 4) return "0 ETB";
+    
     const config = TIERS[bet];
     let prize = 0;
     if (rank === 1) prize = config.basePrize * (bet === 20 ? config.multiplier : 1);
     else if (rank === 2) prize = (config.basePrize / 2) * (bet === 20 ? config.multiplier : 1);
     else if (rank === 3) prize = (config.basePrize / 3) * (bet === 20 ? config.multiplier : 1);
-    else prize = 100 * (bet === 20 ? config.multiplier : 1);
+    else if (rank === 4) prize = 100 * (bet === 20 ? config.multiplier : 1);
 
     // Custom high stakes overrides for 1000 ETB
     if (bet === 1000) {
       if (rank === 1) prize = 50000;
       else if (rank === 2) prize = 25000;
       else if (rank === 3) prize = 15000;
-      else prize = 5000;
+      else if (rank === 4) prize = 5000;
     }
 
     return `${prize.toLocaleString()} ETB`;
@@ -207,9 +213,18 @@ const fetchLeaderboard = async () => {
                       </div>
                       <div className="text-[9px] text-hb-muted font-bold uppercase tracking-wider">{l.coinsWon.toLocaleString()} Coins Won</div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex flex-col items-end gap-1">
                        <div className="text-[13px] font-black text-hb-gold italic">{l.prize}</div>
-                       <div className="text-[8px] text-hb-gold/40 font-black uppercase tracking-tighter">Guaranteed</div>
+                       {l.rank <= 4 ? (
+                         <div className="text-[8px] text-emerald-500 font-black uppercase tracking-tighter">Guaranteed</div>
+                       ) : (
+                         <button 
+                           onClick={onPlay}
+                           className="text-[8px] bg-hb-gold text-hb-blueblack px-2 py-0.5 rounded-full font-black uppercase tracking-tighter hover:scale-105 transition-transform"
+                         >
+                           Play Game
+                         </button>
+                       )}
                     </div>
                  </div>
 

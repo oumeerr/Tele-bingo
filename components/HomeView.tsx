@@ -28,7 +28,7 @@ const HomeView: React.FC<HomeViewProps> = ({ onQuickPlay, arenaState }) => {
     <div className="p-4 flex flex-col gap-5 animate-in fade-in duration-700">
       {/* Arena Lobby Status Banner */}
       <div className={`p-6 rounded-[2.5rem] border transition-all duration-500 overflow-hidden relative shadow-2xl
-        ${arenaState.status === 'playing' ? 'bg-[#0A0A0A] border-hb-border' : 
+        ${arenaState.status === 'playing' ? 'bg-hb-blueblack border-hb-border' : 
           arenaState.status === 'countdown' ? 'bg-hb-gold shadow-[0_20px_50px_rgba(255,215,0,0.2)] border-white/20' : 
           'bg-hb-surface border-hb-border'}`}>
         
@@ -91,20 +91,20 @@ const HomeView: React.FC<HomeViewProps> = ({ onQuickPlay, arenaState }) => {
         <i className="fas fa-dice absolute -right-8 -bottom-8 text-white/20 text-[10rem] rotate-12 group-hover:rotate-45 transition-transform duration-700"></i>
       </div>
 
-        <div className="bg-hb-surface border border-hb-border p-8 rounded-[2rem] shadow-sm">
-           <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[12px] font-black text-hb-muted uppercase tracking-widest">Card Explorer</h3>
-              <span className="text-[12px] text-hb-gold font-bold px-3 py-1 bg-hb-gold/10 rounded-lg border border-hb-gold/20">1-400 Range</span>
-           </div>
-           <p className="text-[13px] text-hb-muted opacity-80 mb-6 font-medium leading-relaxed">Select your lucky numbers. Browse the full collection of available cards.</p>
-           <button 
-             onClick={onQuickPlay}
-             className="w-full py-5 bg-[#121212] rounded-[1.5rem] text-[12px] font-black text-hb-muted uppercase hover:text-white hover:border-hb-muted border border-hb-border transition-all shadow-inner"
-           >
-             View Available Cards
-           </button>
-        </div>
+      <div className="bg-hb-surface border border-hb-border p-8 rounded-[2rem] shadow-sm">
+         <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[12px] font-black text-hb-muted uppercase tracking-widest">Card Explorer</h3>
+            <span className="text-[12px] text-hb-gold font-bold px-3 py-1 bg-hb-gold/10 rounded-lg border border-hb-gold/20">1-400 Range</span>
+         </div>
+         <p className="text-[13px] text-hb-muted opacity-80 mb-6 font-medium leading-relaxed">Select your lucky numbers. Browse the full collection of available cards.</p>
+         <button 
+           onClick={onQuickPlay}
+           className="w-full py-5 bg-hb-bg rounded-[1.5rem] text-[12px] font-black text-hb-muted uppercase hover:text-white hover:border-hb-muted border border-hb-border transition-all shadow-inner"
+         >
+           View Available Cards
+         </button>
       </div>
+    </div>
   );
 };
 
